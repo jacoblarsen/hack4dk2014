@@ -5,8 +5,8 @@ How to get a program (pdf + metadata) from the larm API
 --------------------------------------------------------
 
 * Init session:
-	
-	http://api.larm.fm/v6/Session/Create?format=json
+
+ 	http://api.larm.fm/v6/Session/Create?format=json
 
 * Range query (from 05051977 to 05051977)
 	
