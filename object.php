@@ -14,7 +14,7 @@
 $guid = $_GET['guid'];
 $format = $_GET['format'];
 
-$url = "http://api.larm.fm/v6/View/Get?view=Object&query=0253e715-076f-0949-a7da-174eafa59c5a&pageIndex=0&pageSize=20&sessionGUID=".$guid."&format=".$format."&userHTTPStatusCodes=False";
+$url = "http://api.larm.fm/v6/View/Get?view=Object&query=".$guid."&pageIndex=0&pageSize=20&sessionGUID=&format=".$format."&userHTTPStatusCodes=False";
 
 // Open the Curl session
 $session = curl_init($url);
