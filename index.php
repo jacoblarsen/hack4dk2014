@@ -8,8 +8,8 @@
 		<h1>JAC4DK</h1>
 			<ul>
 				<li><a href="http://www.danskkulturarv.dk/programoversigter/">Dokumetation</a></li>
-				<li><a href="http://localhost:8888/hack4dk/search.php?from=1977-05-06&to=1977-05-06&format=json">Søg Json</a></li>
-				<li><a href="http://localhost:8888/hack4dk/object.php?guid=80f4e0a2-1dfb-af48-b12f-629c23eb99fc&format=xml">Hent XML (fuldtekst ikke tilgængelig via json)</a></li>
+				<li><a href="search.php?from=1977-05-06&to=1977-05-06&format=json" target="_blank">Søg Json</a></li>
+				<li><a href="object.php?guid=80f4e0a2-1dfb-af48-b12f-629c23eb99fc&format=xml" target="_blank">Hent XML (fuldtekst ikke tilgængelig via json)</a></li>
 			</ul>
 			<hr />
 				<p>Fødselsdato: <div type="text" id="datepicker"></div>
@@ -19,9 +19,9 @@
 			<p>
 				<div id="pdfplaceholder" ></div>
 			</p>	
-			<p>
+			<!-- p>
 				<iframe src="" width="600" height="500" alt="pdf" pluginspage="http://www.adobe.com/products/acrobat/readstep2.html" id="pdfembed" ></iframe>
-			</p>
+			</p -->
 			<p>
 			
 				<div id="textplaceholder" ></div>
@@ -48,6 +48,8 @@
   				// Get the pdf of the day
   				$( "#getit" ).on('click', function() {
   					$( "#pdfplaceholder").html("");
+  					$( "#textplaceholder").html("");
+
   					var date = $( "#datepicker" ).val();
   					if(date === ""){
   						alert("Du skal indtaste din fødselsdag");
@@ -57,6 +59,8 @@
   						type: "json"
   					}).done(function(data) 
 					{
+						// Flag that we have no 'Schedule' yet
+						var notDoneYetFlag = true;
   						$.each(data.ModuleResults[0].Results, function(item,val){
   							var type = val.Type;
   							var url = val.Url;
@@ -65,9 +69,9 @@
   							$( "#pdfplaceholder").append("<a href='" + url+"' target='_blank'>"+type+"</a><br/>");
 	  						// IFrame the first pdf
 	  						// Only 'Schedule' since 'ScheduleNotes are borring'
-	  						if (type === 'Schedule'){
-	  							$("#pdfembed").attr("src",url);
-	  							
+	  						if (type === 'Schedule' && notDoneYetFlag){
+	  							//$("#pdfembed").attr("src",url);
+	  							//notDoneYetFlag = false;
 	  							$.ajax({
   									url: "object.php?guid="+guid+"&format=xml",
   									type: "xml"
@@ -75,8 +79,38 @@
 								{
 									var text = $(xml).find("MetadataXml").text()
 										.replace(/^(.*)CDATA./g,'').replace(/.....AllText(.*)$/g,'');
-  									$("#textplaceholder").html("<pre>" + text + "</pre>");
-  						
+									var htmlText = "<p>" + text.replace(/(?:\r\n|\r|\n)/g, '<br/>') + "</p>";
+									console.log(text);
+  									var show = "";
+  									$(htmlText).find("br").each(function(){
+  										try {
+  											var line = this.previousSibling.nodeValue;
+  											if(line.match(/^program/gi)){
+  												$("#textplaceholder").append("<h2>" + line + "</h2>");
+  											} else {
+
+  												// Program starte eg. 13.15 or 9,30
+  												var time = line.match(/^[0-9][0-9]?(,|\.)[0-9][0-9]/g);
+  												if (time){
+  													var normalizedTime = (time+"").replace(",",".");
+  													var lineNoTime = line.replace(/^[0-9][0-9]?(,|\.)[0-9][0-9]/g,'');
+  													$("#textplaceholder").append("<p>" + show + "</p>");
+  													show = "<strong>" + normalizedTime + ": " + lineNoTime + "</strong><br/>";	
+  												} else {
+  													show += line + "<br/>";		
+  												}
+  											}
+  										
+  										} catch(err) {
+  											// Last time the above selector finds <br/>
+  											// there is no nextSibling.nodeValue it throws 'null'
+  											// This just catches that, at do nothing
+
+  										}
+  										
+  									});
+  									$("#textplaceholder").append("<hr/>");
+  									
 				  				});
 	  						}
 	  					});
